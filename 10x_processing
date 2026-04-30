@@ -1,0 +1,302 @@
+library(Seurat)
+library(ggplot2)
+library(cowplot)
+library(scater)
+library(scran)
+library(BiocParallel)
+library(BiocNeighbors)
+library(data.table)
+library(dplyr)
+library(Matrix)
+library(clustree)
+setwd("~/2026sc")
+
+
+qhlsc <- Read10X(data.dir = "~/2026sc/63/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "63.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/68/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "68.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/71/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "71.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/73/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "73.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/79/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "79.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/80/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "80.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/83/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "83.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/84/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "84.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/87/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "87.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/88/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "88.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/90/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "90.rds")
+
+qhlsc <- Read10X(data.dir = "~/2026sc/92/filtered_feature_bc_matrix")
+pbmc <- CreateSeuratObject(counts = qhlsc, project = "qhlsc", min.cells =3, min.features=200)
+pbmc
+pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^mt-")
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 5000 & percent.mt < 10)
+pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", scale.factor = 10000)
+pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pbmc)
+pbmc <- ScaleData(pbmc, features = all.genes)
+pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+#Determine the ‘dimensionality’ of the dataset
+#pbmc <- JackStraw(pbmc, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:40)
+#JackStrawPlot(pbmc, dims = 1:40)
+#ElbowPlot(pbmc,ndims = 40)
+#確定下面的dims
+pbmc <- RunUMAP(pbmc, dims = 1:20)
+saveRDS(pbmc, file = "92.rds")
+
+63<-readRDS(file="63.rds")
+68<-readRDS(file="68.rds")
+71<-readRDS(file="71.rds")
+73<-readRDS(file="73.rds")
+79<-readRDS(file="79.rds")
+80<-readRDS(file="80.rds")
+83<-readRDS(file="83.rds")
+84<-readRDS(file="84.rds")
+87<-readRDS(file="87.rds")
+88<-readRDS(file="88.rds")
+90<-readRDS(file="90.rds")
+92<-readRDS(file="92.rds")
