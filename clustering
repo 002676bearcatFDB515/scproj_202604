@@ -1,0 +1,100 @@
+library(clustree)
+library(Seurat)
+library(magrittr)
+library(dplyr)
+# %>% needs magrittr
+# top_n needs dplyr
+
+mts_individual_integrated<-readRDS(file="mts_after_integrated.rds")
+p1 <- DimPlot(mts_individual_integrated, reduction = "umap", group.by = "celltype")
+p1
+
+#pbmc <- JackStraw(mts_individual_integrated, num.replicate = 100,dims = 40)
+#pbmc <- ScoreJackStraw(pbmc, dims = 1:30)
+#JackStrawPlot(pbmc, dims = 1:30)
+#ElbowPlot(pbmc,ndims = 30)
+#find how many 15cluster
+#ElbowPlot(mts_individual_integrated)
+mts_neighbor<- FindNeighbors(mts_individual_integrated, dims = 1:30)
+
+# mts_individual_integrated no longer used
+rm(mts_individual_integrated)
+
+obj <- FindClusters(mts_neighbor, resolution = seq(0.5,1.2,by=0.1))
+#resolution設置在0.4-1.2之間,越大clusters越多,查看拐點
+clustree(obj)
+mts_cluster <- FindClusters( mts_neighbor, resolution = 5)
+head(Idents(mts_cluster), 5)
+mts_cluster<- RunUMAP(mts_cluster, dims = 1:30)
+
+
+DimPlot(mts_cluster, reduction = "umap")
+saveRDS(mts_cluster, file = "mts_cluster_test_5.rds")
+# changed from 1.2 to 5 to reflect change in resolution in above FindClusters()
+
+
+scRNA.markers <- FindAllMarkers(mts_cluster, 
+                                only.pos = TRUE,  #特异性高表达marker
+                                min.pct = 0.05, 
+                                logfc.threshold = 0.05
+)
+write.table(scRNA.markers,file="cellMarkers.txt",sep="\t",row.names=F,quote=F)
+
+#挑选每个细胞亚群中特意高表达的20个基因
+top20 <- scRNA.markers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC) 
+write.csv(file="top20_cell_markers.csv",top20)
+#整理成表格，只显示基因名字
+top20_table=unstack(top20, gene ~ cluster)
+names(top20_table)=gsub("X","cluster",names(top20_table))
+write.csv(file="top20_marker_genes_5.csv",top20_table,row.names=F)
+
+#细胞及细胞中基因与RNA数量
+slotNames(mts_cluster)
+#assay
+mts_cluster@assays
+dim(mts_cluster@meta.data)
+View(mts_cluster@meta.data)
+
+mts_cluster<-readRDS(file="mts_cluster_test_5.rds")
+DimPlot(mts_cluster, reduction = "umap")
+# this umap plot shows the 105 clusters from our subset data (saved as "cluster_res5.png")
+
+new.cluster.ids <- c("Myeloid", "Lymphoid", "Cycling", "Myeloid", "Myeloid", "Myeloid", "Myeloid", "Stromal", "Myeloid", "Stromal", "Myeloid", "Myeloid", "Myeloid", "Stromal", "Neural", "Lymphoid", "Myeloid", "Epithelial", "Endothelial", "Lymphoid", "Stromal", "Cycling", "Lymphoid", "Myeloid", "Myeloid", "Myeloid", "Myeloid", "Lymphoid", "Lymphoid", "Lymphoid", "Myeloid", "Lymphoid", "Myeloid", "Lymphoid", "Epithelial", "Stromal", "Myeloid", "Lymphoid", "Myeloid", "Myeloid", "Epithelial", "Myeloid", "Myeloid", "Lymphoid", "Myeloid", "Epithelial", "Epithelial", "Lymphoid", "Myeloid", "Lymphoid", "Lymphoid", "Myeloid", "Stromal", "Epithelial", "Epithelial", "Epithelial", "Lymphoid", "Myeloid", "Lymphoid", "Myeloid", "Stromal", "Lymphoid", "Lymphoid", "Epithelial", "Epithelial", "Myeloid", "Epithelial", "Lymphoid", "Lymphoid", "Myeloid", "Myeloid", "Lymphoid", "Lymphoid", "Lymphoid", "Lymphoid", "Myeloid", "Lymphoid", "Neural", "Lymphoid", "Lymphoid", "Lymphoid", "Myeloid", "Lymphoid", "Stromal", "Myeloid", "Stromal", "Lymphoid", "Lymphoid", "Lymphoid", "Myeloid", "Lymphoid", "Myeloid", "Lymphoid", "Lymphoid", "Stromal", "Myeloid", "Myeloid", "Stromal", "Endothelial", "Stromal", "Lymphoid", "Myeloid", "Myeloid", "Myeloid", "Myeloid", "Myeloid")
+
+
+names(new.cluster.ids) <- levels(mts_cluster)
+mts_cluster_id<- RenameIdents(mts_cluster, new.cluster.ids)
+#DimPlot(mts_cluster_id, reduction = "umap", label = TRUE, pt.size = 0.5) 
+DimPlot(mts_cluster_id, reduction = "umap", label = FALSE, pt.size = 0.5) 
+saveRDS(mts_cluster_id, file = "mts_cluster_id_test.rds")
+# the DimPlot with no label is saved as cluster_celltype.png
+
+mts_cluster_id<-readRDS("mts_cluster_id_test.rds")
+
+Myeloid <-subset(mts_cluster_id, idents=c('Myeloid'))
+DimPlot(Myeloid, reduction = "umap")
+saveRDS(Myeloid, file="Myeloid.rds")
+
+Lymphoid<-subset(mts_cluster_id, idents=c('Lymphoid'))
+DimPlot(Lymphoid, reduction = "umap")
+saveRDS(Lymphoid, file="Lymphoid.rds")
+
+Cycling<-subset(mts_cluster_id, idents=c('Cycling'))
+DimPlot(Cycling, reduction = "umap")
+saveRDS(Cycling, file="Cycling.rds")
+
+Stromal<-subset(mts_cluster_id, idents=c('Stromal'))
+DimPlot(Stromal, reduction = "umap")
+saveRDS(Stromal, file="Stromal.rds")
+
+Neural<-subset(mts_cluster_id, idents=c('Neural'))
+DimPlot(Neural, reduction = "umap")
+saveRDS(Neural, file="Neural.rds")
+
+Epithelial<-subset(mts_cluster_id, idents=c('Epithelial'))
+DimPlot(Epithelial, reduction = "umap")
+saveRDS(Epithelial, file="Epithelial.rds")
+
+Endothelial<-subset(mts_cluster_id, idents=c('Endothelial'))
+DimPlot(Endothelial, reduction = "umap")
+saveRDS(Endothelial, file="Endothelial.rds")
