@@ -47,3 +47,66 @@ write.csv(file="Myeloid_top20_cell_markers.csv",top20)
 top20_table=unstack(top20, gene ~ cluster)
 names(top20_table)=gsub("X","cluster",names(top20_table))
 write.csv(file="Myeloid_top20_marker_genes_7.csv",top20_table,row.names=F)
+
+# after annotating the above clusters, the following is for annotation of the myeloid subset 
+setwd("~/2026sc")
+library(Seurat)
+
+DimPlot(cluster_id, reduction = "umap", label = TRUE, pt.size = 0.5)
+
+mts_cluster<-readRDS("Myeloid_test_7.rds")
+scRNA.markers <- FindAllMarkers(mts_cluster, 
+                                only.pos = TRUE,  #特异性高表达marker
+                                min.pct = 0.00001, 
+                                logfc.threshold = 0.00001)
+write.table(scRNA.markers,file="MyeloidcellMarkers-recheck-00001.txt",sep="\t",row.names=F,quote=F)
+
+#挑选每个细胞亚群中特意高表达的20个基因
+top20 <- scRNA.markers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC) 
+write.csv(file="Myeloid_top20_cell_markers-recheck-00001.csv",top20)
+#整理成表格，只显示基因名字
+top20_table=unstack(top20, gene ~ cluster)
+names(top20_table)=gsub("X","cluster",names(top20_table))
+write.csv(file="Myeloid_top20_marker_genes_7-recheck-00001.csv",top20_table,row.names=F)
+
+
+DimPlot(mts_cluster, reduction = "umap", label = TRUE, cells = WhichCells(mts_cluster, idents = c("3", "5", "6", "7", "14", "15", "18", "19", "22", "23", "24", "25", "26", "28", "30", "33", "34", "39", "41", "43", "44", "52", "54", "55", "56", "58", "59", "61", "62", "63", "64", "66", "67", "69", "70", "71", "72", "86", "90", "92", "96", "97")))
+mysub<-subset(mts_cluster, idents = c("3", "5", "6", "7", "14", "15", "18", "19", "22", "23", "24", "25", "26", "28", "30", "33", "34", "39", "41", "43", "44", "52", "54", "55", "56", "58", "59", "61", "62", "63", "64", "66", "67", "69", "70", "71", "72", "86", "90", "92", "96", "97"))
+
+DC <- c("7", "19", "23", "39", "41", "54", "61", "70", "97")
+Granulocyte <- c("6", "64", "66", "86", "96")
+Macrophage <- c("3", "5", "15", "18", "22", "24", "25", "30", "33", "34", "43", "44", "52", "55", "58", "59", "62", "63", "67", "69", "71")
+Mast <- c("72", "90", "92")
+Monocyte <- c("26", "28", "56", "14")
+
+DimPlot(mts_cluster, reduction = "umap", label = TRUE, cells = WhichCells(mts_cluster, idents = DC))
+DimPlot(mts_cluster, reduction = "umap", label = TRUE, cells = WhichCells(mts_cluster, idents = Granulocyte))
+DimPlot(mts_cluster, reduction = "umap", label = TRUE, cells = WhichCells(mts_cluster, idents = Macrophage))
+DimPlot(mts_cluster, reduction = "umap", label = TRUE, cells = WhichCells(mts_cluster, idents = Mast))
+DimPlot(mts_cluster, reduction = "umap", label = TRUE, cells = WhichCells(mts_cluster, idents = Monocyte))
+
+ids <- as.character(Idents(mysub))
+ids[ids %in% c("7", "19", "23", "39", "41", "54", "61", "70", "97")] <- "DC"
+Idents(mysub) <- ids
+
+ids <- as.character(Idents(mysub))
+ids[ids %in% c("6", "64", "66", "86", "96")] <- "Granulocyte"
+Idents(mysub) <- ids
+
+ids <- as.character(Idents(mysub))
+ids[ids %in% c("3", "5", "15", "18", "22", "24", "25", "30", "33", "34", "43", "44", "52", "55", "58", "59", "62", "63", "67", "69", "71")] <- "Macrophage"
+Idents(mysub) <- ids
+
+ids <- as.character(Idents(mysub))
+ids[ids %in% c("72", "90", "92")] <- "Mast"
+Idents(mysub) <- ids
+
+ids <- as.character(Idents(mysub))
+ids[ids %in% c("26", "28", "56", "14")] <- "Monocyte"
+Idents(mysub) <- ids
+
+DimPlot(mysub, reduction = "umap", label = FALSE)
+
+# for calculating percentages
+table(Idents(mysub), mysub$orig.ident)
+
