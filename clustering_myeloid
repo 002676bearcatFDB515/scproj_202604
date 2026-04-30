@@ -1,0 +1,49 @@
+library(Seurat)
+library(magrittr)
+library(dplyr)
+
+#input each cluster
+Myeloid<-readRDS("Myeloid.rds")
+# Lymphoid<-readRDS("Lymphoid.rds")
+# Cycling<-readRDS("Cycling.rds")
+# Stromal<-readRDS("Stromal.rds")
+# Neural<-readRDS("Neural.rds")
+# Epithelial<-readRDS("Epithelial.rds")
+# Endothelial<-readRDS("Endothelial.rds")
+
+#DimPlot
+DimPlot(Myeloid, reduction = "umap", split.by = "tech")
+# DimPlot(Lymphoid, reduction = "umap", split.by = "tech")
+# DimPlot(Cycling, reduction = "umap", split.by = "tech")
+# DimPlot(Stromal, reduction = "umap", split.by = "tech")
+# DimPlot(Neural, reduction = "umap", split.by = "tech")
+# DimPlot(Epithelial, reduction = "umap", split.by = "tech")
+# DimPlot(Endothelial, reduction = "umap", split.by = "tech")
+
+#regroup 
+Myeloid<-readRDS("Myeloid.rds")
+My_neighbors<-FindNeighbors(Myeloid, dims = 1:30)
+obj <- FindClusters(My_neighbors, resolution = seq(0.5,1.2,by=0.1))
+clustree(obj)
+mts_cluster <- FindClusters(My_neighbors, resolution = 7)
+# changing this from 1.2 to 5 to increase clusters--1.2 finds 28 clusters; 5 finds 83; 6 finds 89; 10 finds 141; goal is around 100
+head(Idents(mts_cluster), 5)
+mts_cluster<- RunUMAP(mts_cluster, dims = 1:30)
+DimPlot(mts_cluster, reduction = "umap")
+saveRDS(mts_cluster, file = "Myeloid_test_7.rds")
+
+# Myeloid_test_7.rds has the newly reclustered Myeloid segment of the data
+
+scRNA.markers <- FindAllMarkers(mts_cluster, 
+                                only.pos = TRUE,  #特异性高表达marker
+                                min.pct = 0.05, 
+                                logfc.threshold = 0.05)
+write.table(scRNA.markers,file="MyeloidcellMarkers.txt",sep="\t",row.names=F,quote=F)
+
+#挑选每个细胞亚群中特意高表达的20个基因
+top20 <- scRNA.markers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC) 
+write.csv(file="Myeloid_top20_cell_markers.csv",top20)
+#整理成表格，只显示基因名字
+top20_table=unstack(top20, gene ~ cluster)
+names(top20_table)=gsub("X","cluster",names(top20_table))
+write.csv(file="Myeloid_top20_marker_genes_7.csv",top20_table,row.names=F)
