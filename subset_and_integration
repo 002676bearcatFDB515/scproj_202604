@@ -1,0 +1,100 @@
+library(cowplot)
+library(Seurat)
+
+mts <- readRDS(file="merged_all_samples.rds")
+# before integration
+
+mts[["percent.mt"]] <- PercentageFeatureSet(mts, pattern = "^mt-")
+VlnPlot(mts, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3,pt.size = 0)
+mtsample <- NormalizeData(object = mts, normalization.method = "LogNormalize", scale.factor = 1e4)
+
+rm(mts)
+
+mtsample <- FindVariableFeatures(mtsample, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+mtsample <- ScaleData(mtsample, verbose = FALSE)
+mtsample <- RunPCA(mtsample, npcs = 30, verbose = FALSE)
+mtsample <- RunUMAP(mtsample, reduction = "pca", dims = 1:30)
+p1 <- DimPlot(mtsample, reduction = "umap", group.by = "tech")
+p2 <- DimPlot(mtsample, reduction = "umap", group.by = "celltype", label = TRUE, repel = TRUE) + 
+  NoLegend()
+plot_grid(p1,p2)
+rm(p1,p2)
+
+#integrate
+mtsample.list <- SplitObject(mtsample, split.by = "celltype")
+for (i in 1: length(mtsample.list)) {
+  mtsample.list[[i]] <- NormalizeData(mtsample.list[[i]], verbose = FALSE)
+  mtsample.list[[i]] <- FindVariableFeatures(mtsample.list[[i]], selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+}
+# last use of mtsample--rest is transformations of downstream data
+rm(mtsample)
+# "Model", "Her2-Dxd", "Her-T785", "Her2-Dxd/T75"
+
+
+
+reference.list <- mtsample.list[c("Model", "Her2-Dxd", "Her-T785", "Her2-Dxd/T75")]
+# last use of mtsample.list, so can rm
+rm(mtsample.list)
+# can still subset reference.list here to reduce object size (eg, subset(obj, subset = nFeature_RNA > 500 & percent.mt < 10))
+# subset(reference.list, subset = nFeature_RNA > 250 & percent.mt < 5)
+
+
+# this step randomly removes cells from each cell group until the total cell count is 20000
+set.seed(42)   # for reproducibility
+target_n <- 20000
+
+for (i in seq_along(reference.list)) {
+  obj <- reference.list[[i]]
+  if (ncol(obj) > target_n) {
+    keep_cells <- sample(Cells(obj), target_n)
+    reference.list[[i]] <- subset(obj, cells = keep_cells)
+  }
+}
+
+sapply(reference.list, ncol)
+# Expected: 20000, 20000, 20000, 20000 (or 20000, 20000, 20000, 23416 if you cap rather than pad)
+rm(obj)
+
+# Assuming reference.list still exists (or is recreated from mtsample.list)
+for (i in seq_along(reference.list)) {
+  reference.list[[i]][["RNA"]] <- JoinLayers(reference.list[[i]][["RNA"]])
+}
+
+# Verify: each object should show only "counts" and "data"
+lapply(reference.list, function(obj) Layers(obj[["RNA"]]))
+
+
+features <- SelectIntegrationFeatures(object.list = reference.list)
+
+for (i in seq_along(reference.list)) {
+  reference.list[[i]] <- ScaleData(reference.list[[i]], features = features, verbose = FALSE)
+  reference.list[[i]] <- RunPCA(reference.list[[i]],   features = features, verbose = FALSE)
+}
+
+mtsample.anchors <- FindIntegrationAnchors(
+  object.list = reference.list,
+  reduction   = "rpca",
+  reference   = 1,        # Model (untreated control) as reference
+  dims        = 1:30
+)
+
+# reference.list no longer needed
+rm(reference.list)
+gc(full = TRUE)
+mtsample.integrated <- IntegrateData(anchorset = mtsample.anchors, dims = 1:30)
+
+# this last part is running into memory issues
+mtsample.integrated <- IntegrateData(anchorset = mtsample.anchors, dims = 1:30)
+DefaultAssay(mtsample.integrated) <- "integrated"
+# mtsample.anchors not needed
+rm(mtsample.anchors)
+mtsample.integrated <- ScaleData(mtsample.integrated, verbose = FALSE)
+mtsample.integrated <- RunPCA(mtsample.integrated, npcs = 30, verbose = FALSE)
+mtsample.integrated <- RunUMAP(mtsample.integrated, reduction = "pca", dims = 1:30)
+p1 <- DimPlot(mtsample.integrated, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(mtsample.integrated, reduction = "umap", group.by = "celltype")
+plot_grid(p1,p2)
+
+saveRDS(mtsample.integrated, file = "mts_after_integrated.rds")
+
+#end of integration
