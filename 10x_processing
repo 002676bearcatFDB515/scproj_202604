@@ -300,3 +300,72 @@ saveRDS(pbmc, file = "92.rds")
 88<-readRDS(file="88.rds")
 90<-readRDS(file="90.rds")
 92<-readRDS(file="92.rds")
+
+# sha256 hash for created .rds files
+# 2057b68edb8e0a1b535a5724659ea75fa4ae0f153c0be8679f3971e164a57c9e  63.rds
+#9fd385112438a8f510bd48c897a332b9cdf699cc5e4d31b7c9e6d87bb62bc204  68.rds
+# 31218497a6d73824c1a393886074b494b5fcdc21d916b68eb4a9b2d4e089064a  71.rds
+# 84b4d5c3d11dad1555eadd520551fb9656284294ec8b0deabaf8006acca169ce  73.rds
+# de34b019fceaa3beeb178e1e69bfcff4b91c633ddaa80e4ada0a9ae49c2b3d22  79.rds
+# ffe03b32491d87e7635d787c7a6bcaa9ef63c1bf4ddd85f30ef3977a44415240  80.rds
+# 5e08665fae47f0b070b93df942182c33af8119548ae11292dc980bee7d4098a9  83.rds
+# c3361ca8a9585808cb00c38633cef1e5c6c9e9c3c82ebd39dd5d18f5da7d569d  84.rds
+# dc8840fa7a6adc48fe778ebcf1f5686aceade515bdb9fd27b23d28ab50417616  87.rds
+# 3f8e22e82152a2ad65211b8ee0e27038b3a6dc7bac74346851232d16b26902e5  88.rds
+# 3a413187838465a1d01cd5a4380f4a28b18257f35c9196b52a5cc4d4aa9accf7  90.rds
+# ae4358d685346fa274179d4a2948a3483d4135a7d5de6ae1ce231c1454488236  92.rds
+
+G2_63<-readRDS(file="63.rds")
+G3_68<-readRDS(file="68.rds")
+G1_71<-readRDS(file="71.rds")
+G2_73<-readRDS(file="73.rds")
+G2_79<-readRDS(file="79.rds")
+G3_80<-readRDS(file="80.rds")
+G4_83<-readRDS(file="83.rds")
+G1_84<-readRDS(file="84.rds")
+G1_87<-readRDS(file="87.rds")
+G3_88<-readRDS(file="88.rds")
+G4_90<-readRDS(file="90.rds")
+G4_92<-readRDS(file="92.rds")
+
+# Define sample metadata in one place
+sample_info <- data.frame(
+  id        = c("63", "68", "71", "73", "79", "80", "83", "84", "87", "88", "90", "92"),
+  group     = c("G2", "G3", "G1", "G2", "G2", "G3", "G4", "G1", "G1", "G3", "G4", "G4"),
+  celltype  = c("Her2-Dxd", "Her-T785", "Model", "Her2-Dxd", "Her2-Dxd",
+                "Her-T785", "Her2-Dxd/T75", "Model", "Model", "Her-T785",
+                "Her2-Dxd/T75", "Her2-Dxd/T75"),
+  stringsAsFactors = FALSE
+)
+
+# Read + annotate each object
+seurat_list <- lapply(seq_len(nrow(sample_info)), function(i) {
+  s   <- sample_info[i, ]
+  tag <- paste0(s$group, "_", s$id)
+
+  obj <- readRDS(file = paste0(s$id, ".rds"))
+  obj <- RenameCells(obj, add.cell.id = tag)
+  obj$tech     <- s$group
+  obj$celltype <- s$celltype
+  obj$orig.ident <- tag
+  obj
+})
+names(seurat_list) <- paste0(sample_info$group, "_", sample_info$id)
+
+merged <- merge(
+  x            = seurat_list[[1]],
+  y            = seurat_list[-1],
+  add.cell.ids = NULL,          # already renamed above
+  project      = "Her2_Study"
+)
+
+# Standard downstream workflow
+merged <- NormalizeData(merged)
+merged <- FindVariableFeatures(merged, selection.method = "vst", nfeatures = 2000)
+merged <- ScaleData(merged)
+merged <- RunPCA(merged, npcs = 30)
+merged <- RunUMAP(merged, dims = 1:30)
+merged <- FindNeighbors(merged, dims = 1:30)
+merged <- FindClusters(merged, resolution = 0.5)
+
+saveRDS(merged, file = "merged_all_samples.rds")
