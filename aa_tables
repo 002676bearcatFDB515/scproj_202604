@@ -1,0 +1,59 @@
+library(Seurat)
+library(scRepertoire)
+library(devtools)
+library(circlize)
+library(scales)
+#devtools::install_github("ncborcherding/scRepertoire@dev")
+#manual: https://ncborcherding.github.io/vignettes/vignette.html
+#not install from bioconductor,it is from github. 
+#2.0 changes cloneType -> cloneSize compareClonaltypes -> clonalCompare highlightClonotypes -> highlightClones
+# alluvialClonotypes -> alluvialClones
+# split.by was combined into group.by
+# expression2List was deprecated, but can be used with flag "force = TRUE"
+# clonalCompare arg "numbers" is now "top.clones"
+# StartracDiversity "sample" is not an arg any longer, replaced by "group.by"; "by" is deprecated but default is all 3 (expa, migr, tran)
+# clonalNetwork "identity" is not an arg any longer, replaced by "group.by"
+
+setwd("~/2026sc/scRepertoire")
+
+G2_63 <- read.csv("~/2026sc/63/filtered_contig_annotations.csv")
+G3_68 <- read.csv("~/2026sc/68/filtered_contig_annotations.csv")
+G1_71 <- read.csv("~/2026sc/71/filtered_contig_annotations.csv")
+G2_73 <- read.csv("~/2026sc/73/filtered_contig_annotations.csv")
+G2_79 <- read.csv("~/2026sc/79/filtered_contig_annotations.csv")
+G3_80 <- read.csv("~/2026sc/80/filtered_contig_annotations.csv")
+G4_83 <- read.csv("~/2026sc/83/filtered_contig_annotations.csv")
+G1_84 <- read.csv("~/2026sc/84/filtered_contig_annotations.csv")
+G1_87 <- read.csv("~/2026sc/87/filtered_contig_annotations.csv")
+G3_88 <- read.csv("~/2026sc/88/filtered_contig_annotations.csv")
+G4_90 <- read.csv("~/2026sc/90/filtered_contig_annotations.csv")
+G4_92 <- read.csv("~/2026sc/92/filtered_contig_annotations.csv")
+contig_list <- list(G2_63, G3_68, G1_71, G2_73, G2_79, G3_80, G4_83, G1_84, G1_87, G3_88, G4_90, G4_92)
+combined <- combineTCR(contig_list, 
+                       samples = c("G2_63", "G3_68", "G1_71", "G2_73", "G2_79", "G3_80", "G4_83", "G1_84", "G1_87", "G3_88", "G4_90", "G4_92"), 
+                                             )
+# ID = c("G2", "G3", "G1", "G2", "G2", "G3", "G4", "G1", "G1", "G3", "G4", "G4")
+clonalQuant(combined, cloneCall="strict", scale = T)
+
+viztable<-vizGenes(combined, 
+                   x.axis = "TRAV", 
+                   plot = "barplot", 
+                   summary.fun = "proportion",
+                   order = "variance",
+                   exportTable = TRUE)
+write.csv(viztable, file = "~/2026sc/viztable_prop.csv")
+
+viztable<-vizGenes(combined, 
+                   x.axis = "TRAV", 
+                   plot = "barplot", 
+                   summary.fun = "count",
+                   order = "variance",
+                   exportTable = TRUE)
+write.csv(viztable, file = "~/2026sc/viztable_ct.csv")
+
+
+clonalcomp<-clonalCompare(combined, top.clones = 5, samples = c("G2_63", "G3_68", "G1_71", "G2_73", "G2_79", "G3_80", "G4_83", "G1_84", "G1_87", "G3_88", "G4_90", "G4_92"), cloneCall="aa", graph = "alluvial", exportTable = TRUE)
+write.csv(clonalcomp, file = "~/2026sc/clonalcomp.csv")
+
+clonalcomp<-clonalCompare(combined, top.clones = 5, samples = c("G2_63", "G3_68", "G1_71", "G2_73", "G2_79", "G3_80", "G4_83", "G1_84", "G1_87", "G3_88", "G4_90", "G4_92"),  cloneCall="aa", graph = "alluvial", proportion = FALSE, exportTable = TRUE)
+write.csv(clonalcomp, file = "~/2026sc/clonalcomp_ct.csv")
